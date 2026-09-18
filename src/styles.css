@@ -302,6 +302,128 @@ code {
   color: var(--accent);
 }
 
+/* ---- 实测覆盖开关 ---- */
+.switch-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 10px 0 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: var(--panel-2);
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.switch-row.disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.switch-row input {
+  margin-top: 3px;
+  accent-color: var(--accent);
+}
+
+/* ---- 字体文件上传 ---- */
+.file-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.file-input-hidden {
+  display: none;
+}
+
+.file-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.file-chip {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--text);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.source-badge {
+  font-size: 11px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.source-badge.live {
+  background: var(--ok-soft);
+  color: var(--ok);
+  border-color: rgba(63, 185, 80, 0.4);
+}
+
+.source-badge.idle {
+  background: var(--panel);
+  color: var(--muted);
+}
+
+.parsing-hint {
+  margin: 6px 0;
+}
+
+/* ---- 声明 / 实测差集 ---- */
+.diff-box {
+  margin-top: 2px;
+  padding: 6px 8px;
+  border: 1px dashed var(--border);
+  border-radius: 7px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.diff-title {
+  margin-bottom: 2px;
+}
+
+.diff-details summary {
+  cursor: pointer;
+  list-style: revert;
+  font-size: 11px;
+}
+
+.diff-count.warn {
+  color: var(--warn);
+}
+
+.diff-count.ok {
+  color: var(--ok);
+}
+
+.diff-ranges {
+  margin: 4px 0 2px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  font-size: 11px;
+  line-height: 1.7;
+  color: var(--muted);
+  word-break: break-all;
+  max-height: 120px;
+  overflow: auto;
+}
+
 /* ---- 求解偏好 ---- */
 .slider-row {
   display: flex;
@@ -412,6 +534,11 @@ code {
 .alert.bad {
   background: var(--bad-soft);
   border: 1px solid rgba(248, 81, 73, 0.4);
+}
+
+.alert.mode {
+  background: var(--accent-soft);
+  border: 1px solid rgba(88, 166, 255, 0.4);
 }
 
 .alert-detail {

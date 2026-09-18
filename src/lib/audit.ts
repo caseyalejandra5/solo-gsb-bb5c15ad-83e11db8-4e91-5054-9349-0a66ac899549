@@ -1,4 +1,5 @@
 import type { ClusterAudit, ParsedFont } from '../types';
+import { countCodepoints } from './ranges';
 import { formatCodepoint } from './grapheme';
 
 /** 转义 CSS 字符串中的引号与反斜杠 */
@@ -41,6 +42,8 @@ export interface AuditInput {
   validFontOrder: number[];
   lengthPriority: number;
   ignoreFormatCodepoints: boolean;
+  /** 是否开启“按实测覆盖求解” */
+  useMeasuredCoverage: boolean;
 }
 
 export interface AuditResultData {
@@ -64,6 +67,9 @@ export function buildAuditReport(
   const covered = result.clusters.filter((c) => c.status !== 'missing').length;
   const missing = result.clusters.length - covered;
 
+  const fmtRanges = (rs: [number, number][]) =>
+    rs.map(([s, e]) => [formatCodepoint(s), formatCodepoint(e)]);
+
   return {
     tool: 'unicode-font-fallback-audit',
     version: 1,
@@ -73,6 +79,7 @@ export function buildAuditReport(
       options: {
         lengthPriority: input.lengthPriority,
         ignoreFormatCodepoints: input.ignoreFormatCodepoints,
+        useMeasuredCoverage: input.useMeasuredCoverage,
       },
       fonts: input.fonts.map((f, i) => ({
         preference: i + 1,
@@ -80,7 +87,43 @@ export function buildAuditReport(
         ranges: f.rangesText,
         parsedRanges: f.error
           ? null
-          : f.ranges.map(([s, e]) => [formatCodepoint(s), formatCodepoint(e)]),
+          : fmtRanges(f.ranges),
+        declaredCodepointCount: f.error ? 0 : f.codepointCount,
+        declaredError: f.error,
+        uploadedFont: f.file
+          ? {
+              fileName: f.file.name,
+              sizeBytes: f.file.size,
+              sfntVersion: f.file.sfntVersion,
+              cmapFormats: f.file.cmapFormats,
+              parsedAt: f.file.parsedAt,
+              // 仅输出实测码位区间等元数据；文件二进制从未离开浏览器
+              measuredRanges: fmtRanges(f.file.ranges),
+              measuredCodepointCount: f.file.codepointCount,
+              parseError: f.fileError,
+            }
+          : null,
+        /** 本次分析实际使用的范围来源与区间 */
+        effectiveCoverage: {
+          source: f.effectiveSource,
+          codepointCount: f.effectiveCount,
+          ranges: fmtRanges(f.effectiveRanges),
+        },
+        /** 声明 vs 实测 双向差集 */
+        declaredVsMeasured: f.file
+          ? {
+              declaredOnly: {
+                count: f.diffDeclaredOnly ? countCodepoints(f.diffDeclaredOnly) : 0,
+                segmentCount: f.diffDeclaredOnly?.length ?? 0,
+                ranges: f.diffDeclaredOnly ? fmtRanges(f.diffDeclaredOnly) : [],
+              },
+              measuredOnly: {
+                count: f.diffMeasuredOnly ? countCodepoints(f.diffMeasuredOnly) : 0,
+                segmentCount: f.diffMeasuredOnly?.length ?? 0,
+                ranges: f.diffMeasuredOnly ? fmtRanges(f.diffMeasuredOnly) : [],
+              },
+            }
+          : null,
         error: f.error,
       })),
     },

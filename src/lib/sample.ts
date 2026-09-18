@@ -24,5 +24,5 @@ export function sampleFonts(): FontSpec[] {
     { name: 'Emoji Color', rangesText: 'U+200D, U+FE0F, U+2615, U+1F1E6-1F1FF, U+1F300-1FAFF, U+2700-27BF' },
     { name: 'Arabic Naskh', rangesText: 'U+0600-06FF, U+0750-077F, U+FE70-FEFF' },
     { name: 'Backup Sans', rangesText: 'U+0020-007E, U+4E00-9FFF' },
-  ].map((f) => ({ id: uid(), ...f }));
+  ].map((f) => ({ id: uid(), ...f, file: null }));
 }

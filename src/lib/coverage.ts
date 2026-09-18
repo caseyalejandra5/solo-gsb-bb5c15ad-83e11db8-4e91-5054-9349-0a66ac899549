@@ -72,7 +72,7 @@ export function analyzeCoverage(
 
     const candidates: number[] = [];
     for (let i = 0; i < fonts.length; i++) {
-      if (required.every((cp) => coversCodepoint(fonts[i].ranges, cp))) {
+      if (required.every((cp) => coversCodepoint(fonts[i].effectiveRanges, cp))) {
         candidates.push(i);
       }
     }
@@ -105,6 +105,6 @@ export function analyzeCoverage(
 /** 缺失簇中，具体是哪些码位没有任何字体覆盖 */
 export function findMissingCodepoints(required: number[], fonts: ParsedFont[]): number[] {
   return required.filter(
-    (cp) => !fonts.some((f) => coversCodepoint(f.ranges, cp)),
+    (cp) => !fonts.some((f) => coversCodepoint(f.effectiveRanges, cp)),
   );
 }

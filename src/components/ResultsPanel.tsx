@@ -23,6 +23,7 @@ interface ResultsPanelProps {
   nodesExplored: number;
   auditInput: AuditInput;
   hasText: boolean;
+  useMeasured: boolean;
 }
 
 /** 结果区：概览、回退链、缺失告警、字素簇明细、导出 */
@@ -38,6 +39,7 @@ export default function ResultsPanel(props: ResultsPanelProps) {
     nodesExplored,
     auditInput,
     hasText,
+    useMeasured,
   } = props;
 
   const [filter, setFilter] = useState<ClusterFilter>('all');
@@ -120,6 +122,16 @@ export default function ResultsPanel(props: ResultsPanelProps) {
       )}
       {feasible && validFonts.length > 0 && (
         <div className="alert ok">✓ 可行：当前回退链可覆盖全部 {clusters.length} 个字素簇。</div>
+      )}
+
+      {useMeasured && (
+        <div className="alert mode">
+          <strong>🧪 按实测覆盖求解已开启</strong>
+          <span className="alert-detail">
+            已上传字体使用其 cmap（format 4/12）实测码位参与分析与求解；未上传字体仍用声明范围；
+            清除文件后立即恢复声明范围。
+          </span>
+        </div>
       )}
 
       <section className="block">
