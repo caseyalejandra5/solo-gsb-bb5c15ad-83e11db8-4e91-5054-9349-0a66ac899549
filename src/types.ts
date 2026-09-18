@@ -1,3 +1,23 @@
+/** 本地字体文件上传后的解析状态（文件字节仅存内存，不持久化、不上传） */
+export interface FontUpload {
+  /** 原始文件名 */
+  fileName: string;
+  /** 文件字节数 */
+  fileSize: number;
+  status: 'parsing' | 'ok' | 'error';
+  /** 解析出的实际覆盖区间（status === 'ok' 时有值，已排序合并） */
+  measuredRanges: [number, number][] | null;
+  /** 实际覆盖码位总数 */
+  measuredCount: number;
+  /** 选中的 cmap 子表 */
+  selectedSubtable: 'format-4' | 'format-12' | null;
+  /** 实际参与合并的 cmap 格式 */
+  mergedFormats: Array<4 | 12>;
+  cmapRecordCount: number;
+  /** 解析失败时的错误信息（只影响本条目） */
+  error: string | null;
+}
+
 /** 用户录入的字体条目（编辑态） */
 export interface FontSpec {
   id: string;
@@ -7,12 +27,18 @@ export interface FontSpec {
 
 /** 解析后的字体条目 */
 export interface ParsedFont extends FontSpec {
-  /** 归一化、合并后的闭区间码位范围 */
+  /** 声明范围：归一化、合并后的闭区间码位范围（文本解析） */
   ranges: [number, number][];
-  /** 解析错误信息；null 表示可用 */
+  /** 声明范围解析错误信息；null 表示可用 */
   error: string | null;
-  /** 覆盖的码位总数 */
+  /** 声明范围覆盖的码位总数 */
   codepointCount: number;
+  /** 本地字体文件解析状态；null 表示未上传 */
+  upload: FontUpload | null;
+  /** 当前求解/展示实际使用的范围（开启实测且文件有效时为 cmap 结果，否则为声明范围） */
+  effectiveRanges: [number, number][];
+  /** 实际使用范围的来源 */
+  rangeSource: 'declared' | 'measured';
 }
 
 /** 字素簇的承接状态 */

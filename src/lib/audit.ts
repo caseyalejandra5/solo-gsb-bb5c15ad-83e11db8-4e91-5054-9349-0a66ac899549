@@ -1,5 +1,6 @@
 import type { ClusterAudit, ParsedFont } from '../types';
 import { formatCodepoint } from './grapheme';
+import { countCodepoints, rangeDifference } from './ranges';
 
 /** 转义 CSS 字符串中的引号与反斜杠 */
 export function cssStringEscape(name: string): string {
@@ -41,6 +42,8 @@ export interface AuditInput {
   validFontOrder: number[];
   lengthPriority: number;
   ignoreFormatCodepoints: boolean;
+  /** 是否开启“按实测覆盖求解” */
+  useMeasuredCoverage: boolean;
 }
 
 export interface AuditResultData {
@@ -64,6 +67,12 @@ export function buildAuditReport(
   const covered = result.clusters.filter((c) => c.status !== 'missing').length;
   const missing = result.clusters.length - covered;
 
+  const describeRanges = (ranges: [number, number][]) => ({
+    codepointCount: countCodepoints(ranges),
+    segmentCount: ranges.length,
+    ranges: ranges.map(([s, e]) => [formatCodepoint(s), formatCodepoint(e)]),
+  });
+
   return {
     tool: 'unicode-font-fallback-audit',
     version: 1,
@@ -73,16 +82,56 @@ export function buildAuditReport(
       options: {
         lengthPriority: input.lengthPriority,
         ignoreFormatCodepoints: input.ignoreFormatCodepoints,
+        useMeasuredCoverage: input.useMeasuredCoverage,
       },
-      fonts: input.fonts.map((f, i) => ({
-        preference: i + 1,
-        name: f.name,
-        ranges: f.rangesText,
-        parsedRanges: f.error
-          ? null
-          : f.ranges.map(([s, e]) => [formatCodepoint(s), formatCodepoint(e)]),
-        error: f.error,
-      })),
+      fonts: input.fonts.map((f, i) => {
+        const upload = f.upload;
+        const measured =
+          upload?.status === 'ok' && upload.measuredRanges
+            ? {
+                fileName: upload.fileName,
+                fileSize: upload.fileSize,
+                cmapSubtables: upload.mergedFormats.map((fmt) => `format-${fmt}`),
+                selectedSubtable: upload.selectedSubtable,
+                cmapRecordCount: upload.cmapRecordCount,
+                coverage: describeRanges(upload.measuredRanges),
+                // 声明范围与 cmap 实测范围的双向差集
+                diff: f.error
+                  ? null
+                  : (() => {
+                      const d = rangeDifference(f.ranges, upload.measuredRanges!);
+                      return {
+                        declaredButNotInFont: {
+                          codepointCount: d.onlyACount,
+                          segmentCount: d.onlyA.length,
+                          ranges: d.onlyA.map(([s, e]) => [formatCodepoint(s), formatCodepoint(e)]),
+                        },
+                        inFontButNotDeclared: {
+                          codepointCount: d.onlyBCount,
+                          segmentCount: d.onlyB.length,
+                          ranges: d.onlyB.map(([s, e]) => [formatCodepoint(s), formatCodepoint(e)]),
+                        },
+                      };
+                    })(),
+              }
+            : upload?.status === 'error'
+              ? {
+                  fileName: upload.fileName,
+                  fileSize: upload.fileSize,
+                  parseError: upload.error,
+                }
+              : null;
+        return {
+          preference: i + 1,
+          name: f.name,
+          ranges: f.rangesText,
+          parsedRanges: f.error ? null : describeRanges(f.ranges),
+          declaredRangeError: f.error,
+          localFontFile: measured,
+          coverageSource: f.rangeSource,
+          effectiveRanges: describeRanges(f.effectiveRanges),
+        };
+      }),
     },
     result: {
       feasible: result.feasible,

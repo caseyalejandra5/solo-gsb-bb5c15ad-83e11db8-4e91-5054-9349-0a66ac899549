@@ -7,7 +7,9 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:sfnt": "esbuild scripts/test-sfnt.ts --bundle --platform=node --format=esm --outfile=node_modules/.cache/test-sfnt.mjs && node node_modules/.cache/test-sfnt.mjs",
+    "test:integration": "esbuild scripts/test-integration.ts --bundle --platform=node --format=esm --outfile=node_modules/.cache/test-integration.mjs && node node_modules/.cache/test-integration.mjs"
   },
   "dependencies": {
     "react": "^18.3.1",
